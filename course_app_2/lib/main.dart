@@ -45,38 +45,38 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   final List<Transaction> _userTransactions = [
-    Transaction(
-      id: "1",
-      title: "New shoes",
-      amount: 500,
-      date: DateTime.now(),
-    ),
-    Transaction(
-      id: "2",
-      title: "Weekly Groceries",
-      amount: 267.35,
-      date: DateTime.now().subtract(
-        Duration(days: 1),
-      ),
-    ),
-    Transaction(
-      id: "3",
-      title: "New hair",
-      amount: 180,
-      date: DateTime.now().subtract(
-        Duration(days: 2),
-      ),
-    ),
-    Transaction(
-      id: "4",
-      title: "Piercing",
-      amount: 325,
-      date: DateTime.now().subtract(
-        Duration(days: 3),
-      ),
-    ),
+    // Transaction(
+    //   id: "1",
+    //   title: "New shoes",
+    //   amount: 500,
+    //   date: DateTime.now(),
+    // ),
+    // Transaction(
+    //   id: "2",
+    //   title: "Weekly Groceries",
+    //   amount: 267.35,
+    //   date: DateTime.now().subtract(
+    //     Duration(days: 1),
+    //   ),
+    // ),
+    // Transaction(
+    //   id: "3",
+    //   title: "New hair",
+    //   amount: 180,
+    //   date: DateTime.now().subtract(
+    //     Duration(days: 2),
+    //   ),
+    // ),
+    // Transaction(
+    //   id: "4",
+    //   title: "Piercing",
+    //   amount: 325,
+    //   date: DateTime.now().subtract(
+    //     Duration(days: 3),
+    //   ),
+    // ),
   ];
 
   List<Transaction> get _recentTransactions {
@@ -90,6 +90,24 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   bool _showChart = false;
+
+  @override
+  void initState() {
+    WidgetsBinding.instance.addObserver(this);
+    super.initState();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    print(state);
+    super.didChangeAppLifecycleState(state);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
 
   void _addNewTransaction(String txTitle, double txAmout, DateTime txDate) {
     final newTx = Transaction(
@@ -117,6 +135,54 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  List<Widget> _buildLandscapeContent(
+      MediaQueryData mediaQuery, AppBar appBar, Widget txListWidget) {
+    return [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Text(
+            "Show chart",
+            style: Theme.of(context).textTheme.headline6,
+          ),
+          Switch.adaptive(
+            activeColor: Theme.of(context).accentColor,
+            value: _showChart,
+            onChanged: (val) {
+              setState(() {
+                _showChart = val;
+              });
+            },
+          ),
+        ],
+      ),
+      _showChart
+          ? Container(
+              child: Chart(_recentTransactions),
+              height: (mediaQuery.size.height -
+                      appBar.preferredSize.height -
+                      mediaQuery.padding.top) *
+                  0.7,
+            )
+          : txListWidget
+    ];
+  }
+
+  List<Widget> _buildPortraitContent(
+      MediaQueryData mediaQuery, AppBar appBar, Widget txListWidget) {
+    return [
+      Container(
+        child: Chart(_recentTransactions),
+        height: (mediaQuery.size.height -
+                appBar.preferredSize.height -
+                mediaQuery.padding.top) *
+            0.3,
+      ),
+      txListWidget
+    ];
+  }
+
+// Build method
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
@@ -162,43 +228,9 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           children: <Widget>[
             if (!isPortrait)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Text(
-                    "Show chart",
-                    style: Theme.of(context).textTheme.headline6,
-                  ),
-                  Switch.adaptive(
-                    activeColor: Theme.of(context).accentColor,
-                    value: _showChart,
-                    onChanged: (val) {
-                      setState(() {
-                        _showChart = val;
-                      });
-                    },
-                  ),
-                ],
-              ),
+              ..._buildLandscapeContent(mediaQuery, appBar, txListWidget),
             if (isPortrait)
-              Container(
-                child: Chart(_recentTransactions),
-                height: (mediaQuery.size.height -
-                        appBar.preferredSize.height -
-                        mediaQuery.padding.top) *
-                    0.3,
-              ),
-            if (isPortrait) txListWidget,
-            if (!isPortrait)
-              _showChart
-                  ? Container(
-                      child: Chart(_recentTransactions),
-                      height: (mediaQuery.size.height -
-                              appBar.preferredSize.height -
-                              mediaQuery.padding.top) *
-                          0.7,
-                    )
-                  : txListWidget
+              ..._buildPortraitContent(mediaQuery, appBar, txListWidget)
           ],
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
