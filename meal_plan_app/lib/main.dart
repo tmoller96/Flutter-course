@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_complete_guide/categories_screen.dart';
-import 'package:flutter_complete_guide/category_meals_screen.dart';
+import 'package:flutter_complete_guide/screens/categories_screen.dart';
+import 'package:flutter_complete_guide/screens/category_meals_screen.dart';
+import 'package:flutter_complete_guide/screens/filters_screen.dart';
+import 'package:flutter_complete_guide/screens/meal_details_screen.dart';
+import 'package:flutter_complete_guide/screens/tabs_screen.dart';
 
 void main() => runApp(MyApp());
 
@@ -31,8 +34,17 @@ class MyApp extends StatelessWidget {
       // home: CategoriesScreen(),
       initialRoute: '/',
       routes: {
-        '/': (ctx) => CategoriesScreen(),
+        '/': (ctx) => TabsScreen(),
         CategoryMealsScreen.routeName: (ctx) => CategoryMealsScreen(),
+        MealDetailScreen.routeName: (ctx) => MealDetailScreen(),
+        FiltersScreen.routeName: (ctx) => FiltersScreen(),
+      },
+      // onGenerateRoute: (settings) {
+      //   print(settings.arguments);
+      //   return MaterialPageRoute(builder: (ctx) => CategoriesScreen());
+      // },
+      onUnknownRoute: (settings) {
+        return MaterialPageRoute(builder: (ctx) => CategoriesScreen());
       },
     );
   }
