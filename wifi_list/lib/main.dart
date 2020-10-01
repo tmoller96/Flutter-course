@@ -17,11 +17,13 @@ class _MyAppState extends State<MyApp> {
   String _platformVersion = 'Unknown';
   List<WifiNetwork> wifiNetworkList = List();
   bool isLoaded = false;
+  bool isWifiEnabled = true;
   WifiConnectionStatus _connectionStatus;
 
   @override
   void initState() {
     wifiConfiguration = WifiConfiguration();
+    _checkWifiEnabled();
     _getWifiList();
     _checkConnection();
     super.initState();
@@ -34,11 +36,13 @@ class _MyAppState extends State<MyApp> {
     setState(() {});
   }
 
-  void _connectToWifi(String ssid, String password) async {
+  Future<WifiConnectionStatus> _connectToWifi(
+      String ssid, String password) async {
     _connectionStatus = await wifiConfiguration.connectToWifi(
         ssid, password, "com.example.wifi_list");
     print("is Connected : $_connectionStatus");
     setState(() {});
+    return _connectionStatus;
   }
 
   void _startConnectToWifi(BuildContext ctx, String ssid) {
@@ -56,6 +60,11 @@ class _MyAppState extends State<MyApp> {
     } else {
       _connectionStatus = WifiConnectionStatus.notConnected;
     }
+    setState(() {});
+  }
+
+  void _checkWifiEnabled() async {
+    isWifiEnabled = await wifiConfiguration.isWifiEnabled();
     setState(() {});
   }
 
@@ -87,6 +96,51 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
+  Widget _showEnableWifiWidget() {
+    return Center(
+      child: Text("Please turn on Wifi"),
+    );
+  }
+
+  Widget _showLoadingWifiListWidget() {
+    return Column(
+      children: [
+        SizedBox(
+          height: 20,
+        ),
+        CircularProgressIndicator(),
+        Text("Loading available Wifi connections..."),
+      ],
+    );
+  }
+
+  Widget _showWifiList() {
+    return Column(children: [
+      Expanded(
+        child: ListView.builder(
+          itemCount: wifiNetworkList.length,
+          itemBuilder: (context, index) {
+            WifiNetwork wifiNetwork = wifiNetworkList[index];
+            return InkWell(
+              onTap: () =>
+                  _startConnectToWifi(context, wifiNetworkList[index].ssid),
+              child: ListTile(
+                leading: Text(wifiNetwork.signalLevel),
+                title: Text(wifiNetwork.ssid),
+                subtitle: Text(wifiNetwork.bssid),
+              ),
+            );
+          },
+        ),
+      ),
+      Text("Status: ${_getConnectionStatus()}"),
+      RaisedButton(
+        onPressed: _getWifiList,
+        child: Text("Refresh"),
+      )
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -95,41 +149,9 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Plugin example app'),
         ),
         body: Center(
-          child: isLoaded
-              ? Column(children: [
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: wifiNetworkList.length,
-                      itemBuilder: (context, index) {
-                        WifiNetwork wifiNetwork = wifiNetworkList[index];
-                        return InkWell(
-                          onTap: () => _startConnectToWifi(
-                              context, wifiNetworkList[index].ssid),
-                          child: ListTile(
-                            leading: Text(wifiNetwork.signalLevel),
-                            title: Text(wifiNetwork.ssid),
-                            subtitle: Text(wifiNetwork.bssid),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  Text("Status: ${_getConnectionStatus()}"),
-                  RaisedButton(
-                    onPressed: _getWifiList,
-                    child: Text("Refresh"),
-                  )
-                ])
-              : Column(
-                  children: [
-                    SizedBox(
-                      height: 20,
-                    ),
-                    CircularProgressIndicator(),
-                    Text("Loading available Wifi connections..."),
-                  ],
-                ),
-        ),
+            child: !isWifiEnabled
+                ? _showEnableWifiWidget()
+                : isLoaded ? _showWifiList() : _showLoadingWifiListWidget()),
       ),
     );
   }
@@ -145,8 +167,10 @@ class ConnectToWifi extends StatelessWidget {
 
   void _submitPassword(BuildContext context) {
     final enteredPassword = _passwordController.text;
-    connectToWifi(ssid, enteredPassword);
-    Navigator.of(context).pop();
+    WifiConnectionStatus status = connectToWifi(ssid, enteredPassword);
+    if (status == WifiConnectionStatus.connected) {
+      Navigator.of(context).pop();
+    }
   }
 
   @override
