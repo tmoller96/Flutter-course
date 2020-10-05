@@ -13,7 +13,7 @@ class MyApp extends StatefulWidget {
   _MyAppState createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   String _platformVersion = 'Unknown';
   List<WifiNetwork> wifiNetworkList = List();
   bool isLoaded = false;
@@ -23,10 +23,26 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     wifiConfiguration = WifiConfiguration();
+    WidgetsBinding.instance.addObserver(this);
     _checkWifiEnabled();
     _getWifiList();
     _checkConnection();
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    print("State: $state");
+    if (state == AppLifecycleState.resumed) {
+      _checkWifiEnabled();
+    }
+    super.didChangeAppLifecycleState(state);
   }
 
   void _getWifiList() async {
@@ -165,9 +181,9 @@ class ConnectToWifi extends StatelessWidget {
 
   final _passwordController = TextEditingController();
 
-  void _submitPassword(BuildContext context) {
+  void _submitPassword(BuildContext context) async {
     final enteredPassword = _passwordController.text;
-    WifiConnectionStatus status = connectToWifi(ssid, enteredPassword);
+    WifiConnectionStatus status = await connectToWifi(ssid, enteredPassword);
     if (status == WifiConnectionStatus.connected) {
       Navigator.of(context).pop();
     }
