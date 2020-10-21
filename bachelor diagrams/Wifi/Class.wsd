@@ -1,0 +1,28 @@
+@startuml
+skinparam class {
+    BackgroundColor white
+    BorderColor black
+    ArrowColor black
+}
+
+abstract class IWifiRepository{
+    fetchWifiList(): Future<Either<IFailure, List>>
+    connectToWifi(String ssid, String password): Future<Either<IFailure, Null>>
+}
+
+class WifiRepository{
+    fetchWifiList(): Future<Either<IFailure, List>>
+    connectToWifi(String ssid, String password): Future<Either<IFailure, Null>>
+}
+
+package WifiConfiguration2 <<Folder>>{
+}
+
+WifiRepository -up-|> IWifiRepository
+WifiRepository -right-> WifiConfiguration2
+
+hide members
+show WifiRepository methods
+show IWifiRepository methods
+
+@enduml
