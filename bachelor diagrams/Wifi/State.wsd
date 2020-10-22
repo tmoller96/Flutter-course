@@ -9,24 +9,24 @@ skinparam state {
 mainframe State: Wifi
 
 [*] -right-> WifiInitial
-WifiInitial -down-> WifiLoading: FetchData event
-WifiLoading -right-> WifiLoaded: WifiList not empty
-WifiLoaded -left-> WifiLoading: FetchData event
-WifiLoading -left-> WifiListError: WifiList empty
-WifiListError -right-> WifiLoading: FetchData event 
-WifiLoaded -down-> WifiConnecting: ConnectToNetwork event
+WifiInitial -down-> WifiListLoading: FetchData event
+WifiListLoading -right-> WifiListLoaded: WifiList not empty
+WifiListLoaded -left-> WifiListLoading: FetchData event
+WifiListLoading -left-> WifiListError: WifiList empty
+WifiListError -right-> WifiListLoading: FetchData event 
+WifiListLoaded -down-> WifiConnecting: ConnectToNetwork event
 WifiConnecting -down-> WifiConnected: Wifi connection success
 WifiConnecting -left-> WifiConnectionError: Wifi connection fail
 WifiConnectionError -right-> WifiConnecting: ConnectToNetwork event
-WifiConnectionError -up-> WifiLoading: FetchData event
+WifiConnectionError -up-> WifiListLoading: FetchData event
 WifiConnected -left-> [*]: Navigate to another screen
 
-WifiLoading: Show loading spinner
-WifiLoading: Fetch WifiList
+WifiListLoading: Show loading spinner
+WifiListLoading: Fetch WifiList
 
 WifiListError: Show empty list WifiConnectionError
 
-WifiLoaded: Display WifiList
+WifiListLoaded: Display WifiList
 
 WifiConnectionError: Show connection to wifi failed
 

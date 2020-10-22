@@ -1,0 +1,57 @@
+@startuml
+skinparam sequence {
+    ' General stuff
+    
+    LifeLineBorderColor Black
+    ArrowColor Black
+
+    ' Participant
+    ParticipantBackgroundColor White
+    ParticipantBorderColor Black
+
+    ' Actor
+    ActorBackgroundColor White
+    ActorBorderColor Black
+}
+
+' Other settings
+hide footbox
+skinparam ResponseMessageBelowArrow true
+skinparam SequenceMessageAlign center
+
+' Actors
+actor User
+participant WifiBloc<<Bloc>>
+participant ConnectToWifi<<IUseCase>>
+participant WifiRepository<<IWifiRepository>>
+
+' Sequence
+User -> WifiBloc: start FetchData event
+activate WifiBloc
+WifiBloc -> WifiBloc: Set state WifiListLoading
+WifiBloc -> ConnectToWifi: call
+activate ConnectToWifi
+ConnectToWifi -> WifiRepository: call fetchWifiList()
+activate WifiRepository
+
+alt wifi list not empty
+    WifiRepository --> ConnectToWifi: WifiList
+else wifi list empty
+    WifiRepository --> ConnectToWifi: NoAvailableWifiFailure
+    deactivate WifiRepository
+end
+
+ConnectToWifi --> WifiBloc: result
+deactivate ConnectToWifi
+
+alt result == WifiList
+    WifiBloc -> WifiBloc: Set state WifiListLoaded
+else result == Failure
+    WifiBloc -> WifiBloc: Set state WifiListError
+end
+
+deactivate WifiBloc
+
+
+
+@enduml
